@@ -1,0 +1,49 @@
+{% extends 'blog/base.html' %}
+<!--- view the post in detail inside the base block
+show different content for different users --->
+{% block content %}
+    <div class="post">
+        {% if post.published_date %}                                            <!--- show a publish date if already published, else show a publish button for the creator or for an admin --->
+            <div class="date">
+                {{ post.published_date }}
+            </div>
+        {% else %}
+            <a class="btn btn-default" href="{% url 'post_publish' pk=post.pk %}">Veröffentlichen</a>
+        {% endif %}
+        {% if user.is_superuser or user == post.author %}                        <!--- show an edit and delete button for the creator or for an admin--->
+            <a class="btn btn-default" href="{% url 'post_edit' pk=post.pk %}"><span class="glyphicon glyphicon-pencil"></span></a>
+            <a class="btn btn-default" href="{% url 'post_remove' pk=post.pk %}"><span class="glyphicon glyphicon-remove"></span></a>
+        {% endif %}
+        <p>von: {{ post.author }}</p>
+        <h2>{{ post.title }}</h2>                                                <!--- show post titel and text --->
+        <p>{{ post.text|linebreaksbr }}</p>
+    </div>
+    <a class="btn btn-default" href="{% url 'add_comment_to_post' pk=post.pk %}">Kommentar</a>
+    {% for comment in post.comments.all %}                                      <!--- show a list of all comments --->
+        <div class="comment">
+            <div class="date">
+                {{ comment.created_date }}
+                {% if user.username == comment.author or user.is_superuser %}   <!--- show a remove button for the creator or for an admin (only for registert users)--->
+                    <a class="btn btn-default" href="{% url 'comment_remove' pk=comment.pk %}"><span class="glyphicon glyphicon-remove"></span></a>
+                {% endif %}
+                {% if not comment.approved_comment %}                           <!--- for not approved comments show a publish button for the creator or for an admin (only for registert users) --->
+                    {% if user.username == comment.author or user.is_superuser %}
+                        <a class="btn btn-default" href="{% url 'comment_approve' pk=comment.pk %}"><span class="glyphicon glyphicon-ok"></span></a>
+                    {% endif %}
+                {% endif %}
+            </div>
+            <strong>{{ comment.author }}</strong>                               <!--- show the author for everyone --->
+            {% if comment.approved_comment %}
+                <p>{{ comment.text|linebreaks }}</p>                            <!--- if comment is approved, show the comment for everyone --->
+            {% elif user.is_authenticated %}
+                <em>Kommentar noch nicht öffentlich</em>                        <!--- if comment is not approved, show the comment just for registert users with an "not published" note --->
+                <p>{{ comment.text|linebreaks }}</p>
+            {% else %}
+                <p>Kommentar noch nicht öffentlich</p>                          <!--- if comment is not approved show a "not publised" note for not registerd users--->
+            {% endif %}
+        </div>
+        <hr>
+    {% empty %}
+        <p>keine Kommentare vorhanden</p>                                       <!--- show an empty note if no comment is posted --->
+    {% endfor %}
+{% endblock %}

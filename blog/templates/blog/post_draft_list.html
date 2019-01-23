@@ -1,0 +1,15 @@
+{% extends 'blog/base.html' %}
+<!--- viewing the post draft list inside the base-block
+  with creation date, author and text --->
+{% block content %}
+    {% for post in posts %}
+        {% if user.is_superuser or user == post.author%}
+            <div class="post">
+                <p class="date">entworfen: {{ post.created_date|date:'d-m-Y' }}</p>
+                <p>von: {{ post.author }}</p>
+                <h1><a href="{% url 'post_detail' pk=post.pk %}">{{ post.title }}</a></h1>
+                <p>{{ post.text|truncatechars:200 }}</p>
+            </div>
+        {% endif %}
+    {% endfor %}
+{% endblock %}
